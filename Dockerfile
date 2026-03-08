@@ -15,8 +15,10 @@ RUN curl -L "https://download.geofabrik.de/north-america/canada/ontario-latest.o
 RUN curl -kL "https://www.octranspo.com/files/google_transit.zip" \
     -o google_transit.zip
 
-# Build the OTP routing graph (2G heap — fits within Railway Hobby 8GB)
-RUN java -Xmx2G -jar /opt/opentripplanner.jar --build --save .
+# Find the OTP jar and build the routing graph
+RUN OTP_JAR=$(find / -name "otp-*.jar" 2>/dev/null | head -1) && \
+    echo "Found OTP jar at: $OTP_JAR" && \
+    java -Xmx2G -jar "$OTP_JAR" --build --save .
 
 # ── Final image ──
 FROM opentripplanner/opentripplanner:2.5.0
