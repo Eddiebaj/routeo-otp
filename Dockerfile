@@ -15,10 +15,11 @@ RUN curl -L "https://download.geofabrik.de/north-america/canada/ontario-latest.o
 RUN curl -kL "https://www.octranspo.com/files/google_transit.zip" \
     -o google_transit.zip
 
-# Find the OTP jar and build the routing graph
-RUN OTP_JAR=$(find / -name "otp-*.jar" 2>/dev/null | head -1) && \
-    echo "Found OTP jar at: $OTP_JAR" && \
-    java -Xmx2G -jar "$OTP_JAR" --build --save .
+# Diagnostic: find the OTP jar location
+RUN echo "=== All jars ===" && find / -name "*.jar" 2>/dev/null; \
+    echo "=== /opt contents ===" && ls -la /opt/; \
+    echo "=== /app contents ===" && ls -la /app/ 2>/dev/null || true; \
+    echo "=== entrypoint ===" && cat /entrypoint.sh 2>/dev/null || true
 
 # ── Final image ──
 FROM opentripplanner/opentripplanner:2.5.0
