@@ -21,5 +21,5 @@ COPY router-config.json .
 
 EXPOSE 8080
 
-# --buildAndServe: build graph then immediately start serving (OTP 2.x)
-CMD ["--buildAndServe"]
+# OTP 2.5: directory comes first, then flags
+CMD ["/var/opentripplanner", "--buildAndServe"]
