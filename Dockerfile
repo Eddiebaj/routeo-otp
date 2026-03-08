@@ -21,5 +21,5 @@ COPY router-config.json .
 
 EXPOSE 8080
 
-# Build graph on first boot then serve
-CMD ["--build", "--load", "--serve", "--baseDirectory", "/var/opentripplanner"]
+# OTP 2.x image entrypoint is java -jar ..., just pass args via CMD
+CMD ["--build", "--load", "--serve"]
