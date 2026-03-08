@@ -11,12 +11,12 @@ WORKDIR /var/opentripplanner
 RUN curl -L "https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf" \
     -o ontario.osm.pbf
 
-# Download OC Transpo GTFS feed
-RUN curl -L "https://www.octranspo.com/files/google_transit.zip" \
+# Download OC Transpo GTFS feed (-k bypasses self-signed cert issue)
+RUN curl -kL "https://www.octranspo.com/files/google_transit.zip" \
     -o google_transit.zip
 
-# Build the OTP routing graph
-RUN java -Xmx4G -jar /opt/opentripplanner.jar --build --save .
+# Build the OTP routing graph (2G heap — fits within Railway Hobby 8GB)
+RUN java -Xmx2G -jar /opt/opentripplanner.jar --build --save .
 
 # ── Final image ──
 FROM opentripplanner/opentripplanner:2.5.0
