@@ -2,23 +2,15 @@ FROM opentripplanner/opentripplanner:2.5.0
 
 USER root
 
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /var/opentripplanner
-
-RUN curl -L "https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf" \
-    -o ontario.osm.pbf
-
-RUN curl -kL "https://www.octranspo.com/files/google_transit.zip" \
-    -o google_transit.zip
-
-COPY otp-config.json .
-COPY router-config.json .
-
-# Write startup script: build graph then serve
-RUN printf '#!/bin/sh\nset -e\notp --build --save /var/opentripplanner\nexec otp --load --serve /var/opentripplanner\n' > /start.sh \
-    && chmod +x /start.sh
+# Force cache bust + find everything
+RUN echo "cache-bust-3" && \
+    echo "=== ALL FILES IN / (2 levels) ===" && ls -la / && \
+    echo "=== /app ===" && ls -laR /app 2>/dev/null; \
+    echo "=== /opt ===" && ls -laR /opt 2>/dev/null; \
+    echo "=== /usr/local/bin ===" && ls -la /usr/local/bin 2>/dev/null; \
+    echo "=== /usr/bin ===" && ls -la /usr/bin | grep -i otp 2>/dev/null; \
+    echo "=== ENTRYPOINT ===" && cat /proc/1/cmdline 2>/dev/null; \
+    echo "=== find jars ===" && find / -name "*.jar" 2>/dev/null; \
+    echo "DONE"
 
 EXPOSE 8080
-
-ENTRYPOINT ["/bin/sh", "/start.sh"]
