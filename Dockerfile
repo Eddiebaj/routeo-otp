@@ -21,5 +21,8 @@ COPY router-config.json .
 
 EXPOSE 8080
 
-# OTP 2.5: directory comes first, then flags
-CMD ["/var/opentripplanner", "--buildAndServe"]
+# Diagnostic: show what the existing entrypoint does, find jars/scripts
+RUN cat /docker-entrypoint.sh 2>/dev/null || \
+    cat /entrypoint.sh 2>/dev/null || \
+    find / -name "*.sh" -not -path "*/proc/*" 2>/dev/null | head -20 && \
+    find / -name "*.jar" -not -path "*/proc/*" 2>/dev/null | head -10
