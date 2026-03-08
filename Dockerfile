@@ -21,5 +21,5 @@ COPY router-config.json .
 
 EXPOSE 8080
 
-# OTP 2.x image entrypoint is java -jar ..., just pass args via CMD
-CMD ["--build", "--load", "--serve"]
+# --buildAndServe: build graph then immediately start serving (OTP 2.x)
+CMD ["--buildAndServe"]
