@@ -15,13 +15,10 @@ RUN curl -kL "https://www.octranspo.com/files/google_transit.zip" \
 COPY otp-config.json .
 COPY router-config.json .
 
-# Print the existing ENTRYPOINT script so we know what it calls
-RUN echo "=== /docker-entrypoint.sh ===" && cat /docker-entrypoint.sh 2>/dev/null; \
-    echo "=== /entrypoint.sh ===" && cat /entrypoint.sh 2>/dev/null; \
-    echo "=== /usr/local/bin ===" && ls -la /usr/local/bin/ 2>/dev/null; \
-    echo "=== /opt ===" && ls -la /opt/ 2>/dev/null; \
-    echo "=== find jars ===" && find / -name "*.jar" -not -path "*/proc/*" -not -path "*/sys/*" 2>/dev/null; \
-    echo "=== find sh scripts ===" && find /usr /opt /app -name "*.sh" 2>/dev/null; \
-    echo "DONE"
+# Write startup script: build graph then serve
+RUN printf '#!/bin/sh\nset -e\notp --build --save /var/opentripplanner\nexec otp --load --serve /var/opentripplanner\n' > /start.sh \
+    && chmod +x /start.sh
 
 EXPOSE 8080
+
+ENTRYPOINT ["/bin/sh", "/start.sh"]
