@@ -18,6 +18,6 @@ RUN curl -L "https://contenu.sto.ca/GTFS/GTFS.zip" -o sto-gtfs.zip
 
 COPY otp-config.json .
 COPY router-config.json .
-RUN /docker-entrypoint.sh --build --save
+COPY sto-gtfs.zip sto-gtfs.zip
 EXPOSE 8080
 ENTRYPOINT ["/docker-entrypoint.sh", "--load", "--serve"]
