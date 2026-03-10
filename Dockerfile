@@ -18,3 +18,4 @@ COPY build-config.json .
 RUN /docker-entrypoint.sh --build --save
 EXPOSE 8080
 ENTRYPOINT ["/docker-entrypoint.sh", "--load", "--serve"]
+
