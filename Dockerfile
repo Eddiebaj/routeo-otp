@@ -7,8 +7,8 @@ RUN curl -L "https://download.geofabrik.de/north-america/canada/ontario-latest.o
     -o ontario.osm.pbf
 RUN curl -L "https://download.geofabrik.de/north-america/canada/quebec-latest.osm.pbf" \
     -o quebec.osm.pbf
-COPY sto-gtfs.zip sto-gtfs.zip
 COPY google_transit.zip oc-transpo-gtfs.zip
+COPY sto-gtfs.zip sto-gtfs.zip
 COPY otp-config.json .
 COPY router-config.json .
 COPY build-config.json .
