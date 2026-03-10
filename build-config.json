@@ -1,5 +1,11 @@
 {
   "transitServiceStart": "-P1Y",
   "transitServiceEnd": "P3Y",
-  "timeZone": "America/Toronto"
+  "gtfsFeeds": [
+    {
+      "source": "sto-gtfs.zip",
+      "feedId": "STO",
+      "agencyTimezoneOverride": "America/Toronto"
+    }
+  ]
 }
