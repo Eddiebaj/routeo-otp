@@ -12,6 +12,7 @@ COPY sto-gtfs.zip sto-gtfs.zip
 COPY otp-config.json .
 COPY router-config.json .
 COPY build-config.json .
+ENV JAVA_OPTS="-Xmx12g"
 RUN /docker-entrypoint.sh --build --save
 EXPOSE 8080
 ENTRYPOINT ["/docker-entrypoint.sh", "--load", "--serve"]
