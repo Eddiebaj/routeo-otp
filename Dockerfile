@@ -1,4 +1,4 @@
-FROM opentripplanner/opentripplanner:2.5.0
+FROM opentripplanner/opentripplanner:2.5.0@sha256:a8e8fa2dc7c97c48e0ed22c77cbc5c0b4dc7a31b9d72c4cc83a0ad953fcb61dd
 
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
