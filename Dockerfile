@@ -5,7 +5,11 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /var/opentripplanner
 WORKDIR /var/opentripplanner
 
-COPY graph.obj .
+# Download pre-built graph from GitHub LFS
+RUN curl -L -H "Accept: application/vnd.git-lfs+json" \
+    "https://media.githubusercontent.com/media/Eddiebaj/routeo-otp/main/graph.obj" \
+    -o graph.obj
+
 COPY otp-config.json .
 COPY router-config.json .
 
