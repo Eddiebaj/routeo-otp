@@ -22,15 +22,14 @@ jobs:
 
       - name: Check calendar expiry
         run: |
-          END_DATE=$(python3 - /tmp/feeds.json <<'EOF'
+          END_DATE=$(python3 -c "
 import json, sys
-with open(sys.argv[1]) as f:
+with open('/tmp/feeds.json') as f:
     data = json.load(f)
 feeds = data if isinstance(data, list) else [data]
-dates = [str(feed["endDate"]) for feed in feeds if feed.get("endDate")]
-print(min(dates) if dates else "UNKNOWN")
-EOF
-          )
+dates = [str(feed['endDate']) for feed in feeds if feed.get('endDate')]
+print(min(dates) if dates else 'UNKNOWN')
+          ")
 
           echo "Earliest endDate: $END_DATE"
 
