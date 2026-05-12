@@ -10,12 +10,22 @@ RUN curl -L "https://download.geofabrik.de/north-america/canada/ontario-latest.o
 RUN curl -L "https://download.geofabrik.de/north-america/canada/quebec-latest.osm.pbf" \
     -o quebec.osm.pbf
 
-ARG CACHE_BUST=2
+ARG CACHE_BUST=3
 COPY google_transit.zip oc-transpo-gtfs.zip
 COPY sto-gtfs.zip sto-gtfs.zip
 COPY otp-config.json .
 COPY router-config.json .
 COPY build-config.json .
+
+# Patch STO GTFS: replace America/Montreal with America/Toronto in agency.txt
+# OTP 2.5.0 treats them as different timezones despite identical offsets,
+# which causes a build conflict when merged with OC Transpo's Canada/Eastern feed.
+RUN apt-get update && apt-get install -y unzip zip && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p /tmp/sto-patch \
+ && unzip -q sto-gtfs.zip -d /tmp/sto-patch \
+ && sed -i 's/America\/Montreal/America\/Toronto/g' /tmp/sto-patch/agency.txt \
+ && (cd /tmp/sto-patch && zip -q -r /var/opentripplanner/sto-gtfs.zip .) \
+ && rm -rf /tmp/sto-patch
 
 ENV JAVA_OPTS="-Xmx12g"
 RUN /docker-entrypoint.sh --build --save
