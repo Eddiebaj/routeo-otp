@@ -1,4 +1,5 @@
 {
   "transitServiceStart": "-P1Y",
-  "transitServiceEnd": "P3Y"
+  "transitServiceEnd": "P3Y",
+  "transitServiceTimeZone": "America/Toronto"
 }
