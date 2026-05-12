@@ -1,0 +1,59 @@
+name: OTP Calendar Expiry Check
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # Every Monday at 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-calendar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch OTP feeds
+        run: |
+          FEEDS_URL="https://opentripplanner-production.up.railway.app/otp/routers/default/index/feeds"
+          echo "Fetching: $FEEDS_URL"
+          curl -sf --max-time 30 "$FEEDS_URL" -o /tmp/feeds.json || {
+            echo "::error::Failed to reach OTP feeds endpoint — OTP may be down."
+            exit 1
+          }
+          echo "Feeds response saved."
+          cat /tmp/feeds.json
+
+      - name: Check calendar expiry
+        run: |
+          END_DATE=$(python3 - /tmp/feeds.json <<'EOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+feeds = data if isinstance(data, list) else [data]
+dates = [str(feed["endDate"]) for feed in feeds if feed.get("endDate")]
+print(min(dates) if dates else "UNKNOWN")
+EOF
+          )
+
+          echo "Earliest endDate: $END_DATE"
+
+          if [ "$END_DATE" = "UNKNOWN" ]; then
+            echo "::warning::Could not find endDate in OTP feeds response — check feed format."
+            exit 0
+          fi
+
+          # Convert YYYYMMDD → YYYY-MM-DD for GNU date
+          FORMATTED="${END_DATE:0:4}-${END_DATE:4:2}-${END_DATE:6:2}"
+          TODAY_SEC=$(date -u +%s)
+          END_SEC=$(date -u -d "$FORMATTED" +%s)
+          DAYS_LEFT=$(( (END_SEC - TODAY_SEC) / 86400 ))
+
+          echo "Days until calendar expiry: $DAYS_LEFT (endDate: $END_DATE)"
+
+          if [ "$DAYS_LEFT" -lt 0 ]; then
+            OVERDUE=$(( DAYS_LEFT * -1 ))
+            echo "::error::GTFS calendar EXPIRED ${OVERDUE} day(s) ago (endDate: $END_DATE). OTP is serving stale schedule data — trigger an immediate GTFS refresh."
+            exit 1
+          elif [ "$DAYS_LEFT" -le 14 ]; then
+            echo "::error::GTFS calendar expires in $DAYS_LEFT day(s) (endDate: $END_DATE). Run the Weekly GTFS Refresh workflow now to avoid service interruption."
+            exit 1
+          else
+            echo "GTFS calendar is healthy — $DAYS_LEFT days remaining (endDate: $END_DATE)."
+          fi
