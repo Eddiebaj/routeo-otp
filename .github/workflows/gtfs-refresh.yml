@@ -1,7 +1,7 @@
-name: Nightly GTFS Refresh
+name: Weekly GTFS Refresh
 on:
   schedule:
-    - cron: '0 7 1 * *'
+    - cron: '0 6 * * 1'
   workflow_dispatch:
 
 jobs:
@@ -13,31 +13,37 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
 
-      - name: Download latest GTFS
+      - name: Download latest OC Transpo GTFS
         run: |
-          curl -L "https://oct-gtfs-emasagcnfmcgeham.z01.azurefd.net/public-access/GTFSExport.zip" \
+          curl -fL "https://oct-gtfs-emasagcnfmcgeham.z01.azurefd.net/public-access/GTFSExport.zip" \
             -o google_transit.zip
-          echo "Downloaded $(du -sh google_transit.zip)"
-          unzip -t google_transit.zip && echo "✓ ZIP is valid"
+          echo "OC GTFS: $(du -sh google_transit.zip)"
+          unzip -t google_transit.zip && echo "OC GTFS ZIP valid"
 
-      - name: Commit and push if changed
+      - name: Download latest STO GTFS
+        run: |
+          curl -fL "https://contenu.sto.ca/GTFS/GTFS.zip" -o sto-gtfs.zip
+          echo "STO GTFS: $(du -sh sto-gtfs.zip)"
+          unzip -t sto-gtfs.zip && echo "STO GTFS ZIP valid"
+
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add google_transit.zip
+          git add google_transit.zip sto-gtfs.zip
           if git diff --staged --quiet; then
-            echo "No changes to GTFS, skipping."
+            echo "No GTFS changes — forcing redeploy anyway."
+            git commit --allow-empty -m "chore: force OTP rebuild $(date +'%Y-%m-%d')"
           else
-            git commit -m "chore: refresh OC Transpo GTFS $(date +'%Y-%m-%d')"
-            git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eddiebaj/routeo-otp.git
-            git push
+            git commit -m "chore: refresh GTFS $(date +'%Y-%m-%d')"
           fi
+          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eddiebaj/routeo-otp.git
+          git push
 
       - name: Trigger Railway redeploy
         run: |
-          curl -X POST \
+          curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"query":"mutation { deploymentRedeploy(id: \"${{ secrets.RAILWAY_SERVICE_ID }}\") { id } }"}' \
-            https://backboard.railway.app/graphql/v2
-
+            -d "{\"query\":\"mutation { serviceInstanceRedeploy(environmentId: \\\"${{ secrets.RAILWAY_ENVIRONMENT_ID }}\\\", serviceId: \\\"${{ secrets.RAILWAY_SERVICE_ID }}\\\") }\"}" \
+            https://backboard.railway.app/graphql/v2 | tee /dev/stderr | jq .
